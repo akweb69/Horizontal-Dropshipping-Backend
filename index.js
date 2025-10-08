@@ -28,7 +28,7 @@ let db; // Global DB reference
 async function run() {
   try {
     await client.connect();
-    db = client.db("Tanzim");
+    db = client.db("Horizon");
     console.log("✅ Successfully connected to MongoDB!");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
@@ -167,11 +167,19 @@ app.delete("/categories/:id", async (req, res) => {
 });
 app.patch("/categories/:id", async (req, res) => {
   const id = req.params.id;
-  const updatedData = req.body;
-  const result = await db
-    .collection("categories")
-    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
-  res.send(result);
+  const { _id, ...updatedData } = req.body;
+  try {
+    const result = await db
+      .collection("categories")
+      .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+    if (result.matchedCount === 0) {
+      return res.status(404).send({ error: "Category not found" });
+    }
+    res.send(result);
+  } catch (error) {
+    console.error("Error updating category:", error);
+    res.status(500).send({ error: "Failed to update category" });
+  }
 });
 // ?-------------------Admin - Category Management-------------------->
 // !-------------------Admin - User Management-------------------->
