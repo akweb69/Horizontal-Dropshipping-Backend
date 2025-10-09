@@ -123,12 +123,22 @@ app.patch("/featured-items/:id", async (req, res) => {
 // !-------------------Admin - Product Management-------------------->
 app.post("/products", async (req, res) => {
   const productData = req.body;
-  const result = await db.collection("products").insertOne(productData);
+  const productData1 = {
+    ...productData,
+    createdAt: new Date(),
+    totalSell: 0,
+    rating: 0,
+  };
+  const result = await db.collection("products").insertOne(productData1);
   res.send(result);
 });
 
 app.get("/products", async (req, res) => {
-  const products = await db.collection("products").find().toArray();
+  const products = await db
+    .collection("products")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
   res.send(products);
 });
 app.delete("/products/:id", async (req, res) => {
