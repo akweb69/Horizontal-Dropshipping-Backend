@@ -245,4 +245,39 @@ app.patch("/orders/:id", async (req, res) => {
     .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
   res.send(result);
 });
-// ?-------------------Admin - Order Management-------------------->
+// ?-------------------Admin - user Management-------------------->
+app.post("/users", async (req, res) => {
+  const userData = req.body;
+  const result = await db.collection("users").insertOne(userData);
+  res.send(result);
+});
+
+app.get("/users", async (req, res) => {
+  const users = await db.collection("users").find().toArray();
+  res.send(users);
+});
+app.delete("/users/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("users")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+app.patch("/users/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const result = await db
+    .collection("users")
+    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+  res.send(result);
+});
+// load user by email--->
+app.get("/users/:email", async (req, res) => {
+  const email = req.params.email;
+  const user = await db.collection("users").findOne({ email });
+  if (!user) {
+    return res.status(404).send({ error: "User not found" });
+  }
+  res.send(user);
+});
+// ?-------------------Admin - user Management-------------------->
