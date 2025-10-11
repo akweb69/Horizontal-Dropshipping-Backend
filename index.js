@@ -247,9 +247,15 @@ app.patch("/orders/:id", async (req, res) => {
 });
 // ?-------------------Admin - user Management-------------------->
 app.post("/users", async (req, res) => {
-  const userData = req.body;
-  const result = await db.collection("users").insertOne(userData);
-  res.send(result);
+  try {
+    const userData = req.body;
+
+    const result = await db.collection("users").insertOne(userData);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Server Error" });
+  }
 });
 
 app.get("/users", async (req, res) => {
@@ -281,3 +287,49 @@ app.get("/users/:email", async (req, res) => {
   res.send(user);
 });
 // ?-------------------Admin - user Management-------------------->
+// ! -----------------wiselist----------------->
+app.post("/wishlist", async (req, res) => {
+  const wishData = req.body;
+  const result = await db.collection("wishlist").insertOne(wishData);
+  res.send(result);
+});
+app.get("/wishlist", async (req, res) => {
+  const email = req.query.email;
+  let query = {};
+  if (email) {
+    query.email = email;
+  }
+  const wishlist = await db.collection("wishlist").find(query).toArray();
+  res.send(wishlist);
+});
+app.delete("/wishlist/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("wishlist")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+// ! -----------------wiselist----------------->
+// ! -----------------cart----------------->
+app.post("/cart", async (req, res) => {
+  const cartData = req.body;
+  const result = await db.collection("cart").insertOne(cartData);
+  res.send(result);
+});
+app.get("/cart", async (req, res) => {
+  const email = req.query.email;
+  let query = {};
+  if (email) {
+    query.email = email;
+  }
+  const cart = await db.collection("cart").find(query).toArray();
+  res.send(cart);
+});
+app.delete("/cart/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("cart")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+// ! -----------------cart----------------->
