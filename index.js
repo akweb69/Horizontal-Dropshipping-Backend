@@ -333,3 +333,12 @@ app.delete("/cart/:id", async (req, res) => {
   res.send(result);
 });
 // ! -----------------cart----------------->
+app.post("/love", async (req, res) => {
+  const id = req.body.productId;
+  const query = { _id: new ObjectId(id) };
+  // get the product item by id
+  const product = await db.collection("products").findOne(query);
+  const data = product;
+  const result = await db.collection("love").insertOne(data);
+  res.send(result);
+});
