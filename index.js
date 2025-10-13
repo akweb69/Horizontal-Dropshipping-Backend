@@ -75,7 +75,11 @@ app.post("/hero-section-banner", async (req, res) => {
 });
 
 app.get("/hero-section-banner", async (req, res) => {
-  const banners = await db.collection("heroSectionBanner").find().toArray();
+  const banners = await db
+    .collection("heroSectionBanner")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
   res.send(banners);
 });
 app.delete("/hero-section-banner/:id", async (req, res) => {
@@ -101,7 +105,11 @@ app.post("/featured-items", async (req, res) => {
 });
 
 app.get("/featured-items", async (req, res) => {
-  const items = await db.collection("featuredItems").find().toArray();
+  const items = await db
+    .collection("featuredItems")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
   res.send(items);
 });
 app.delete("/featured-items/:id", async (req, res) => {
@@ -165,7 +173,11 @@ app.post("/categories", async (req, res) => {
 });
 
 app.get("/categories", async (req, res) => {
-  const categories = await db.collection("categories").find().toArray();
+  const categories = await db
+    .collection("categories")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
   res.send(categories);
 });
 app.delete("/categories/:id", async (req, res) => {
@@ -195,12 +207,23 @@ app.patch("/categories/:id", async (req, res) => {
 // !-------------------Admin - User Management-------------------->
 app.post("/users", async (req, res) => {
   const userData = req.body;
+  if (userData.reference) {
+    const qq = userData.reference;
+    console.log(qq);
+    const query = { reference: qq };
+    const updateData = {
+      $push: { myReferralUser: userData.email },
+    };
+    console.log(updateData);
+    const updating = await db.collection("users").updateOne(query, updateData);
+    console.log("data updated", updating);
+  }
   const result = await db.collection("users").insertOne(userData);
   res.send(result);
 });
 
 app.get("/users", async (req, res) => {
-  const users = await db.collection("users").find().toArray();
+  const users = await db.collection("users").find().sort({ _id: -1 }).toArray();
   res.send(users);
 });
 app.delete("/users/:id", async (req, res) => {
@@ -227,7 +250,11 @@ app.post("/orders", async (req, res) => {
 });
 
 app.get("/orders", async (req, res) => {
-  const orders = await db.collection("orders").find().toArray();
+  const orders = await db
+    .collection("orders")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
   res.send(orders);
 });
 app.get("/orders/:orderId", async (req, res) => {
@@ -269,7 +296,7 @@ app.post("/users", async (req, res) => {
 });
 
 app.get("/users", async (req, res) => {
-  const users = await db.collection("users").find().toArray();
+  const users = await db.collection("users").find().sort({ _id: -1 }).toArray();
   res.send(users);
 });
 app.delete("/users/:id", async (req, res) => {
@@ -309,7 +336,11 @@ app.get("/wishlist", async (req, res) => {
   if (email) {
     query.email = email;
   }
-  const wishlist = await db.collection("wishlist").find(query).toArray();
+  const wishlist = await db
+    .collection("wishlist")
+    .find(query)
+    .sort({ _id: -1 })
+    .toArray();
   res.send(wishlist);
 });
 app.delete("/wishlist/:id", async (req, res) => {
