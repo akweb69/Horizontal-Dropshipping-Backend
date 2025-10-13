@@ -424,3 +424,48 @@ app.delete("/buy-package/:id", async (req, res) => {
     .deleteOne({ _id: new ObjectId(id) });
   res.send(result);
 });
+app.patch("/buy-package/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updatedData = req.body.packageStatus;
+    const email = req.body.email;
+    const planName = req.body.planName;
+
+    if (!id || !updatedData || !email) {
+      return res.status(400).send({ error: "Missing required fields" });
+    }
+
+    if (updatedData === "Approved") {
+      const userQuery = { email };
+      const user = await db.collection("users").findOne(userQuery);
+
+      if (!user) {
+        return res.status(404).send({ error: "User not found" });
+      }
+
+      await db.collection("users").updateOne(userQuery, {
+        $set: {
+          "subscription.plan": planName,
+          isMember: true,
+        },
+      });
+    }
+
+    const result = await db
+      .collection("buyPackage")
+      .updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { packageStatus: updatedData } }
+      );
+
+    res.send({
+      success: true,
+      message: "Package status updated successfully",
+      result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+// buy product api-------->
