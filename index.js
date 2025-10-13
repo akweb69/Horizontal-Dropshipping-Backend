@@ -207,12 +207,16 @@ app.patch("/categories/:id", async (req, res) => {
 // !-------------------Admin - User Management-------------------->
 app.post("/users", async (req, res) => {
   const userData = req.body;
+  const tuki = {
+    name: userData.name,
+    date: userData.date,
+  };
   if (userData.reference) {
     const qq = userData.reference;
     console.log(qq);
     const query = { reference: qq };
     const updateData = {
-      $push: { myReferralUser: userData.email },
+      $push: { myReferralUser: tuki },
     };
     console.log(updateData);
     const updating = await db.collection("users").updateOne(query, updateData);
