@@ -230,6 +230,16 @@ app.get("/orders", async (req, res) => {
   const orders = await db.collection("orders").find().toArray();
   res.send(orders);
 });
+app.get("/orders/:orderId", async (req, res) => {
+  const orderId = req.params.orderId;
+  const order = await db
+    .collection("orders")
+    .findOne({ _id: new ObjectId(orderId) });
+  if (!order) {
+    return res.status(404).send({ error: "Order not found" });
+  }
+  res.send(order);
+});
 app.delete("/orders/:id", async (req, res) => {
   const id = req.params.id;
   const result = await db
@@ -313,17 +323,21 @@ app.delete("/wishlist/:id", async (req, res) => {
 // ! -----------------cart----------------->
 app.post("/cart", async (req, res) => {
   const cartData = req.body;
-  const result = await db.collection("cart").insertOne(cartData);
+  const productId = cartData.productId;
+  const data = await db
+    .collection("products")
+    .findOne({ _id: new ObjectId(productId) });
+  if (!data) {
+    return res.status(404).send({ error: "Product not found" });
+  }
+  const result = await db
+    .collection("cart")
+    .insertOne({ ...data, email: cartData.email });
   res.send(result);
 });
 app.get("/cart", async (req, res) => {
-  const email = req.query.email;
-  let query = {};
-  if (email) {
-    query.email = email;
-  }
-  const cart = await db.collection("cart").find(query).toArray();
-  res.send(cart);
+  const result = await db.collection("cart").find().sort({ _id: -1 }).toArray();
+  res.send(result);
 });
 app.delete("/cart/:id", async (req, res) => {
   const id = req.params.id;
@@ -335,10 +349,23 @@ app.delete("/cart/:id", async (req, res) => {
 // ! -----------------cart----------------->
 app.post("/love", async (req, res) => {
   const id = req.body.productId;
+  const email = req.body.email;
   const query = { _id: new ObjectId(id) };
   // get the product item by id
   const product = await db.collection("products").findOne(query);
-  const data = product;
+  const data = { ...product, email };
   const result = await db.collection("love").insertOne(data);
   res.send(result);
 });
+app.get("/love", async (req, res) => {
+  const love = await db.collection("love").find().sort({ _id: -1 }).toArray();
+  res.send(love);
+});
+app.delete("/love/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("love")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+// buy api-------->
