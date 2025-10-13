@@ -403,4 +403,24 @@ app.delete("/love/:id", async (req, res) => {
     .deleteOne({ _id: new ObjectId(id) });
   res.send(result);
 });
-// buy api-------->
+// buy package api-------->
+app.post("/buy-package", async (req, res) => {
+  const packageData = req.body;
+  const result = await db.collection("buyPackage").insertOne(packageData);
+  res.send(result);
+});
+app.get("/buy-package", async (req, res) => {
+  const packages = await db
+    .collection("buyPackage")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(packages);
+});
+app.delete("/buy-package/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("buyPackage")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
