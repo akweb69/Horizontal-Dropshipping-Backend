@@ -469,3 +469,16 @@ app.patch("/buy-package/:id", async (req, res) => {
   }
 });
 // buy product api-------->
+app.post("/sell-product", async (req, res) => {
+  const productData = req.body;
+  const result = await db.collection("sellProduct").insertOne(productData);
+  res.send(result);
+});
+app.get("/sell-product", async (req, res) => {
+  const products = await db
+    .collection("sellProduct")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(products);
+});
