@@ -357,19 +357,39 @@ app.delete("/wishlist/:id", async (req, res) => {
 // ! -----------------wiselist----------------->
 // ! -----------------cart----------------->
 app.post("/cart", async (req, res) => {
-  const cartData = req.body;
-  const productId = cartData.productId;
-  const data = await db
-    .collection("products")
-    .findOne({ _id: new ObjectId(productId) });
-  if (!data) {
-    return res.status(404).send({ error: "Product not found" });
+  try {
+    const { email, productId } = req.body;
+    if (!email || !productId) {
+      return res.status(400).send({ error: "Invalid request data" });
+    }
+    console.log(productId, email);
+
+    const product = await db
+      .collection("products")
+      .findOne({ _id: new ObjectId(productId) });
+    console.log(product);
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+
+    // Prevent duplicate entry
+    const alreadyInCart = await db
+      .collection("cart")
+      .findOne({ email, _id: product._id });
+    if (alreadyInCart) {
+      return res.status(409).send({ message: "Already in cart" });
+    }
+    const { _id, ...productWithoutId } = product;
+    const result = await db
+      .collection("cart")
+      .insertOne({ ...productWithoutId, email });
+    res.send({ insertedId: result.insertedId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
   }
-  const result = await db
-    .collection("cart")
-    .insertOne({ ...data, email: cartData.email });
-  res.send(result);
 });
+
 app.get("/cart", async (req, res) => {
   const result = await db.collection("cart").find().sort({ _id: -1 }).toArray();
   res.send(result);
@@ -382,16 +402,44 @@ app.delete("/cart/:id", async (req, res) => {
   res.send(result);
 });
 // ! -----------------cart----------------->
+
 app.post("/love", async (req, res) => {
-  const id = req.body.productId;
-  const email = req.body.email;
-  const query = { _id: new ObjectId(id) };
-  // get the product item by id
-  const product = await db.collection("products").findOne(query);
-  const data = { ...product, email };
-  const result = await db.collection("love").insertOne(data);
-  res.send(result);
+  try {
+    const { productId, email } = req.body;
+    if (!productId || !email) {
+      return res.status(400).send({ error: "Invalid data" });
+    }
+
+    const query = { _id: new ObjectId(productId) };
+    const product = await db.collection("products").findOne(query);
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+
+    // check if already loved
+    const exist = await db.collection("love").findOne({ email, productId });
+    if (exist) {
+      return res.send({ message: "Already in favorites" });
+    }
+
+    // remove _id and add new one
+    const { _id, ...rest } = product;
+
+    const data = {
+      ...rest,
+      productId,
+      email,
+      lovedAt: new Date(),
+    };
+
+    const result = await db.collection("love").insertOne(data);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Server error" });
+  }
 });
+
 app.get("/love", async (req, res) => {
   const love = await db.collection("love").find().sort({ _id: -1 }).toArray();
   res.send(love);
