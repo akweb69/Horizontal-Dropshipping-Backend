@@ -530,3 +530,54 @@ app.get("/sell-product", async (req, res) => {
     .toArray();
   res.send(products);
 });
+
+// manage withdraw--->
+app.post("/withdraw", async (req, res) => {
+  const withdrawData = req.body;
+  const result = await db.collection("withdraw").insertOne(withdrawData);
+  res.send(result);
+});
+app.get("/withdraw", async (req, res) => {
+  const withdraws = await db
+    .collection("withdraw")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(withdraws);
+});
+app.patch("/withdraw/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updatedData = req.body.status;
+    const email = req.body.email;
+    const amount = req.body.amount;
+    if (!id || !updatedData || !email) {
+      return res.status(400).send({ error: "Missing required fields" });
+    }
+    if (updatedData === "Approved") {
+      const userQuery = { email };
+      const user = await db.collection("users").findOne(userQuery);
+      if (!user) {
+        return res.status(404).send({ error: "User not found" });
+      }
+      if (user.balance < amount) {
+        return res.status(400).send({ error: "Insufficient balance" });
+      }
+      await db.collection("users").updateOne(userQuery, {
+        $inc: { balance: -amount },
+      });
+    }
+    const result = await db
+      .collection("withdraw")
+      .updateOne({ _id: new ObjectId(id) }, { $set: { status: updatedData } });
+    res.send({
+      success: true,
+      message: "Withdraw status updated successfully",
+      result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+});
+// manage withdraw--->
