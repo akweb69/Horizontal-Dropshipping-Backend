@@ -595,3 +595,11 @@ app.get("/payment-number", async (req, res) => {
     .toArray();
   res.send(payments);
 });
+app.patch("/payment-number/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const result = await db
+    .collection("paymentNumber")
+    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+  res.send(result);
+});
