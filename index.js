@@ -581,3 +581,9 @@ app.patch("/withdraw/:id", async (req, res) => {
   }
 });
 // manage withdraw--->
+// manage payment number--->
+app.post("/payment-number", async (req, res) => {
+  const paymentData = req.body;
+  const result = await db.collection("paymentNumber").insertOne(paymentData);
+  res.send(result);
+});
