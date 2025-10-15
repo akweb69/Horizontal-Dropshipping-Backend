@@ -587,3 +587,11 @@ app.post("/payment-number", async (req, res) => {
   const result = await db.collection("paymentNumber").insertOne(paymentData);
   res.send(result);
 });
+app.get("/payment-number", async (req, res) => {
+  const payments = await db
+    .collection("paymentNumber")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(payments);
+});
