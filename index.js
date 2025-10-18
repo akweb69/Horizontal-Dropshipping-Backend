@@ -621,3 +621,47 @@ app.get("/website-logo", async (req, res) => {
   res.send(logos[0]);
 });
 // logo management --->
+// manage package data ---->
+app.post("/manage-package", async (req, res) => {
+  const packageData = req.body;
+  const result = await db.collection("managePackage").insertOne(packageData);
+  res.send(result);
+});
+app.get("/manage-package", async (req, res) => {
+  const packages = await db
+    .collection("managePackage")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(packages);
+});
+app.delete("/manage-package/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("managePackage")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+app.patch("/manage-package/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const result = await db
+    .collection("managePackage")
+    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+  res.send(result);
+});
+// manage package data ---->
+// contact info--->
+app.post("/contact-info", async (req, res) => {
+  const contactData = req.body;
+  const result = await db.collection("contactInfo").insertOne(contactData);
+  res.send(result);
+});
+app.get("/contact-info", async (req, res) => {
+  const contacts = await db
+    .collection("contactInfo")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(contacts[0]);
+});
