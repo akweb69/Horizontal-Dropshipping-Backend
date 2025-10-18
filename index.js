@@ -478,6 +478,7 @@ app.patch("/buy-package/:id", async (req, res) => {
     const updatedData = req.body.packageStatus;
     const email = req.body.email;
     const planName = req.body.planName;
+    const storeInfo = req.body.storeInfo;
 
     if (!id || !updatedData || !email) {
       return res.status(400).send({ error: "Missing required fields" });
@@ -495,6 +496,7 @@ app.patch("/buy-package/:id", async (req, res) => {
         $set: {
           "subscription.plan": planName,
           isMember: true,
+          storeInfo,
         },
       });
     }
@@ -603,3 +605,19 @@ app.patch("/payment-number/:id", async (req, res) => {
     .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
   res.send(result);
 });
+
+// website  logo--->
+app.post("/website-logo", async (req, res) => {
+  const logoData = req.body;
+  const result = await db.collection("websiteLogo").insertOne(logoData);
+  res.send(result);
+});
+app.get("/website-logo", async (req, res) => {
+  const logos = await db
+    .collection("websiteLogo")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(logos[0]);
+});
+// logo management --->
