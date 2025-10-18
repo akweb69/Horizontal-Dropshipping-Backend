@@ -245,6 +245,15 @@ app.patch("/users/:id", async (req, res) => {
     .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
   res.send(result);
 });
+app.patch("/update-profile-photo/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body.formData;
+  const query = { _id: new ObjectId(id) };
+  const { _id, ...rest } = data;
+  const updateData = { $set: { ...rest } };
+  const result = await db.collection("users").updateOne(query, updateData);
+  res.send(result);
+});
 // !-------------------Admin - User Management-------------------->
 // ?-------------------Admin - Order Management-------------------->
 app.post("/orders", async (req, res) => {
