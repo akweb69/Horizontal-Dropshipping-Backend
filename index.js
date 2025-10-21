@@ -557,40 +557,18 @@ app.get("/withdraw", async (req, res) => {
   res.send(withdraws);
 });
 app.patch("/withdraw/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const updatedData = req.body.status;
-    const email = req.body.email;
-    const amount = req.body.amount;
-    if (!id || !updatedData || !email) {
-      return res.status(400).send({ error: "Missing required fields" });
-    }
-    if (updatedData === "Approved") {
-      const userQuery = { email };
-      const user = await db.collection("users").findOne(userQuery);
-      if (!user) {
-        return res.status(404).send({ error: "User not found" });
-      }
-      if (user.balance < amount) {
-        return res.status(400).send({ error: "Insufficient balance" });
-      }
-      await db.collection("users").updateOne(userQuery, {
-        $inc: { balance: -amount },
-      });
-    }
-    const result = await db
-      .collection("withdraw")
-      .updateOne({ _id: new ObjectId(id) }, { $set: { status: updatedData } });
-    res.send({
-      success: true,
-      message: "Withdraw status updated successfully",
-      result,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "Internal Server Error" });
-  }
+  const id = req.params.id;
+  const newStatus = req.body.status;
+  const approval_date = new Date().toLocaleDateString();
+  const result = await db
+    .collection("withdraw")
+    .updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: newStatus, approval_date } }
+    );
+  res.send(result);
 });
+
 // manage withdraw--->
 // manage payment number--->
 app.post("/payment-number", async (req, res) => {
