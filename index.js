@@ -730,3 +730,20 @@ app.delete("/contact-us/:id", async (req, res) => {
   res.send(result);
 });
 // contact us ----->
+// class-request---->
+app.post("/class-request", async (req, res) => {
+  const classRequestData = req.body;
+  const result = await db
+
+    .collection("classRequest")
+    .insertOne(classRequestData);
+  res.send(result);
+});
+app.get("/class-request", async (req, res) => {
+  const classRequests = await db
+    .collection("classRequest")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(classRequests);
+});
