@@ -240,11 +240,20 @@ app.delete("/users/:id", async (req, res) => {
 app.patch("/users/:id", async (req, res) => {
   const id = req.params.id;
   const updatedData = req.body;
+  console.log(updatedData);
+  let finalData = null;
+  if (updatedData.role === "user") {
+    finalData = { ...updatedData, role: updatedData.role, isAdmin: false };
+  }
+  if (updatedData.role) {
+    finalData = { ...updatedData, role: updatedData.role, isAdmin: true };
+  }
   const result = await db
     .collection("users")
-    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+    .updateOne({ _id: new ObjectId(id) }, { $set: finalData || updatedData });
   res.send(result);
 });
+
 app.patch("/update-profile-photo/:id", async (req, res) => {
   const id = req.params.id;
   const data = req.body.formData;
@@ -296,37 +305,37 @@ app.patch("/orders/:id", async (req, res) => {
   res.send(result);
 });
 // ?-------------------Admin - user Management-------------------->
-app.post("/users", async (req, res) => {
-  try {
-    const userData = req.body;
+// app.post("/users", async (req, res) => {
+//   try {
+//     const userData = req.body;
 
-    const result = await db.collection("users").insertOne(userData);
-    res.send(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Server Error" });
-  }
-});
+//     const result = await db.collection("users").insertOne(userData);
+//     res.send(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ message: "Server Error" });
+//   }
+// });
 
-app.get("/users", async (req, res) => {
-  const users = await db.collection("users").find().sort({ _id: -1 }).toArray();
-  res.send(users);
-});
-app.delete("/users/:id", async (req, res) => {
-  const id = req.params.id;
-  const result = await db
-    .collection("users")
-    .deleteOne({ _id: new ObjectId(id) });
-  res.send(result);
-});
-app.patch("/users/:id", async (req, res) => {
-  const id = req.params.id;
-  const updatedData = req.body;
-  const result = await db
-    .collection("users")
-    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
-  res.send(result);
-});
+// app.get("/users", async (req, res) => {
+//   const users = await db.collection("users").find().sort({ _id: -1 }).toArray();
+//   res.send(users);
+// });
+// app.delete("/users/:id", async (req, res) => {
+//   const id = req.params.id;
+//   const result = await db
+//     .collection("users")
+//     .deleteOne({ _id: new ObjectId(id) });
+//   res.send(result);
+// });
+// app.patch("/users/:id", async (req, res) => {
+//   const id = req.params.id;
+//   const updatedData = req.body;
+//   const result = await db
+//     .collection("users")
+//     .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+//   res.send(result);
+// });
 // load user by email--->
 app.get("/users/:email", async (req, res) => {
   const email = req.params.email;
@@ -367,7 +376,7 @@ app.delete("/wishlist/:id", async (req, res) => {
 // ! -----------------cart----------------->
 app.post("/cart", async (req, res) => {
   try {
-    const { email, productId } = req.body;
+    const { email, productId, price, size } = req.body;
     if (!email || !productId) {
       return res.status(400).send({ error: "Invalid request data" });
     }
@@ -389,9 +398,13 @@ app.post("/cart", async (req, res) => {
       return res.status(409).send({ message: "Already in cart" });
     }
     const { _id, ...productWithoutId } = product;
-    const result = await db
-      .collection("cart")
-      .insertOne({ ...productWithoutId, email });
+    const result = await db.collection("cart").insertOne({
+      ...productWithoutId,
+      email,
+      price,
+      size,
+      addedAt: new Date(),
+    });
     res.send({ insertedId: result.insertedId });
   } catch (error) {
     console.error(error);
@@ -414,7 +427,7 @@ app.delete("/cart/:id", async (req, res) => {
 
 app.post("/love", async (req, res) => {
   try {
-    const { productId, email } = req.body;
+    const { productId, email, price, size } = req.body;
     if (!productId || !email) {
       return res.status(400).send({ error: "Invalid data" });
     }
@@ -439,6 +452,8 @@ app.post("/love", async (req, res) => {
       productId,
       email,
       lovedAt: new Date(),
+      price,
+      size,
     };
 
     const result = await db.collection("love").insertOne(data);
@@ -652,3 +667,66 @@ app.get("/contact-info", async (req, res) => {
     .toArray();
   res.send(contacts[0]);
 });
+// promodata--->
+app.post("/promo-data", async (req, res) => {
+  const promoData = req.body;
+  const result = await db.collection("promoData").insertOne(promoData);
+  res.send(result);
+});
+app.get("/promo-data", async (req, res) => {
+  const promos = await db
+    .collection("promoData")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(promos);
+});
+app.patch("/promo-data/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const result = await db
+    .collection("promoData")
+    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+  res.send(result);
+});
+app.delete("/promo-data/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("promoData")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+// promodata--->
+
+// contact us ----->
+app.post("/contact-us", async (req, res) => {
+  const contactUsData = req.body;
+  const result = await db
+    .collection("contactUs")
+    .insertOne({ ...contactUsData, status: "unread" });
+  res.send(result);
+});
+app.get("/contact-us", async (req, res) => {
+  const contacts = await db
+    .collection("contactUs")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(contacts);
+});
+app.patch("/contact-us/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedData = req.body;
+  const result = await db
+    .collection("contactUs")
+    .updateOne({ _id: new ObjectId(id) }, { $set: updatedData });
+  res.send(result);
+});
+app.delete("/contact-us/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await db
+    .collection("contactUs")
+    .deleteOne({ _id: new ObjectId(id) });
+  res.send(result);
+});
+// contact us ----->
