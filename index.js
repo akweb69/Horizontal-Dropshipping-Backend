@@ -478,6 +478,16 @@ app.delete("/love/:id", async (req, res) => {
 // buy package api-------->
 app.post("/buy-package", async (req, res) => {
   const packageData = req.body;
+  // const use_refferal = packageData.use_refferal;
+  // if (use_refferal) {
+  //   const invite_user_email = packageData.invite_user_email;
+  //   const query = { email: invite_user_email };
+  //   const updateData = {
+  //     $inc: { referIncome: 50 },
+  //   };
+  //   const updating = await db.collection("users").updateOne(query, updateData);
+  //   console.log("data updated", updating);
+  // }
   const result = await db.collection("buyPackage").insertOne(packageData);
   res.send(result);
 });
@@ -503,7 +513,24 @@ app.patch("/buy-package/:id", async (req, res) => {
     const email = req.body.email;
     const planName = req.body.planName;
     const storeInfo = req.body.storeInfo;
+    const validityDays = req.body.validityDays;
 
+    const invite_reffer_user_email = await db
+      .collection("buyPackage")
+      .findOne({ _id: new ObjectId(id) });
+    const invite_user_email = invite_reffer_user_email.invite_user_email;
+
+    if (invite_reffer_user_email && updatedData === "Approved") {
+      const query = { email: invite_user_email };
+      const updateData = {
+        $inc: { referIncome: 50 },
+        $push: { myReferralUser: { email: email, planName: planName } },
+      };
+      const updating = await db
+        .collection("users")
+        .updateOne(query, updateData);
+      console.log("data updated", updating);
+    }
     if (!id || !updatedData || !email) {
       return res.status(400).send({ error: "Missing required fields" });
     }
@@ -519,8 +546,10 @@ app.patch("/buy-package/:id", async (req, res) => {
       await db.collection("users").updateOne(userQuery, {
         $set: {
           "subscription.plan": planName,
+          "subscription.validUntil": new Date(),
           isMember: true,
           storeInfo,
+          validityDays,
         },
       });
     }
@@ -747,3 +776,67 @@ app.get("/class-request", async (req, res) => {
     .toArray();
   res.send(classRequests);
 });
+// reffer withdraw---->
+app.post("/refer-withdraw", async (req, res) => {
+  const referWithdrawData = req.body;
+
+  const userEmail = referWithdrawData.email;
+  const amountToWithdraw = referWithdrawData.amount;
+  const query = { email: userEmail };
+  const updateData = {
+    $inc: { referIncome: -amountToWithdraw },
+  };
+  const updating = await db.collection("users").updateOne(query, updateData);
+  console.log("data updated", updating);
+  const result = await db
+
+    .collection("referWithdraw")
+    .insertOne(referWithdrawData);
+  res.send(result);
+});
+app.get("/refer-withdraw", async (req, res) => {
+  const referWithdraws = await db
+    .collection("referWithdraw")
+    .find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(referWithdraws);
+});
+app.patch("/refer-withdraw/:id", async (req, res) => {
+  const id = req.params.id;
+  const newStatus = req.body.status;
+  const email = req.body.email;
+
+  if (newStatus === "Rejected") {
+    const query = { email: email };
+    const updateData = {
+      $inc: { referIncome: req.body.amount },
+    };
+    const updating = await db.collection("users").updateOne(query, updateData);
+    console.log("data updated", updating);
+  }
+  const result = await db
+    .collection("referWithdraw")
+    .updateOne({ _id: new ObjectId(id) }, { $set: { status: newStatus } });
+  res.send(result);
+});
+// meyad sesh--------->
+app.patch("/users_mayead_sesh", async (req, res) => {
+  const email = req.body.email;
+  // const updatedData = {
+  //   isMember: false,
+  //   subscription: { plan: "No Plan", validUntil: "" },
+  // };
+  const result = await db.collection("users").updateOne(
+    { email: email },
+    {
+      $set: {
+        isMember: false,
+        "subscription.plan": "No Plan",
+        "subscription.validUntil": null,
+      },
+    }
+  );
+  res.send(result);
+});
+// meyad sesh--------->
